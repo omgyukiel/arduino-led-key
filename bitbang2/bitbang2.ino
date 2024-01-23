@@ -19,7 +19,7 @@ void cmdout(int cmd){ // Send 8 bit instruction
     } else {
       digitalWrite(DIO,LOW);
     }
-    // clocks the MSB at the output pin
+    // clocks the LSB at the output pin
     digitalWrite(CLK, HIGH);  
     cmd = cmd>>1;
     digitalWrite(CLK, LOW); 
@@ -36,7 +36,7 @@ void debug_setLED(int cmd) {
   shiftcmd(cmd); // debug
 }
 void setLED(int cmd) {
-  digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
+  // digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
   cmdout(cmd); // send instruction
   digitalWrite(STB, HIGH); // complete data transmission
 }
@@ -46,21 +46,40 @@ void debug_reset() {
   shiftcmd(0x40); // sequential addressing
   digitalWrite(STB, LOW);
   shiftOut(DIO, CLK, LSBFIRST, 0xC0); // starting address to 0
+  digitalWrite(STB, HIGH);
 
-  for (int i = 0; i < 16; i++) {
-    shiftOut(DIO, CLK, LSBFIRST, 0x3F); // sets digit to 0;
+  digitalWrite(STB, LOW);
+  for (int i = 0; i < 17; i++) {
+    if (i%2) { // odd
+      shiftOut(DIO, CLK, LSBFIRST, 0x3F); // sets digit to 0;
+    } else {
+      shiftOut(DIO, CLK, LSBFIRST, 0x01); // set led on
+    }
   }
   digitalWrite(STB, HIGH);
 }
 void reset() {
-  shiftcmd(0x40); // sequential addressing
-  // digitalWrite(STB, LOW);
-  // shiftOut(DIO, CLK, LSBFIRST, 0xc0); // starting address to 0
+  int cmd;
+  cmd = 0x40; // sequential addressing
+  digitalWrite(STB, LOW);
+  cmdout(cmd);
+  digitalWrite(STB, HIGH);
 
-  // for (int i = 0; i < 8; i++) {
-  //   shiftOut(DIO, CLK, LSBFIRST, 0x00); // sets digit to 0;
-  // }
-  // digitalWrite(STB, HIGH);
+
+  cmd = 0xc0; // first address
+  digitalWrite(STB, LOW);
+  cmdout(cmd);
+  digitalWrite(STB, HIGH);
+
+  digitalWrite(STB, LOW);
+  for (int i = 0; i < 17; i++) {
+    if (i%2) { // odd
+      cmdout(0x3F); // sets digit to 0;
+    } else {
+      cmdout(0x00); // sets led offS
+    }
+  }
+  digitalWrite(STB, HIGH);
   return;
 }
 
@@ -83,15 +102,19 @@ void setup() {
 
 }
 
+void counter() {
 
+}
 void loop() {
   char mode;
   Serial.println("\nTM1638 Start\n");
-  Serial.println("0 - Reset");
+  Serial.println("0 - Debug Reset");
+  Serial.println("r - Reset");
   Serial.println("1 - Debug On");
   Serial.println("2 - Debug Off");
   Serial.println("3 - On");
   Serial.println("4 - Off");
+  Serial.println("5 - counter");
 
 
   Serial.println("");
@@ -101,11 +124,13 @@ void loop() {
 
   switch (mode) {
     case '0':
-
-        Serial.print("reset");
-
+        Serial.print("Debug reset");
       debug_reset();
       break;
+    case 'r':
+      Serial.print("Reset");
+      reset();
+    break;
     case '1':
         Serial.print("debug on");
 
@@ -122,6 +147,9 @@ void loop() {
     case '4':
       Serial.println("prod off");
       setLED(OFF);
+      break;
+    case '5':
+      counter();
       break;
     default:
       break;
