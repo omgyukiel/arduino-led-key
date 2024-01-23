@@ -5,13 +5,13 @@
 #define DIO 8
 
 #define CMDMSK 0x80 // 8 bit mask
-#define ON 0x8F // debug on
-#define OFF 0x87 // debug off
+#define ON 0x8F // turn on display with max brightness
+#define OFF 0x87 // turn off display
 
 
 void cmdout(int cmd){ // Send 8 bit instruction
   byte j;
-  for(j=0; j<8; j++){
+  for(j=0; j<8; j++){ // left shift out 8 bits
     if(cmd & CMDMSK){ // Set output pin to 1/0 from mask
       digitalWrite(DIO,HIGH);
     } else {
@@ -33,9 +33,7 @@ void shiftcmd(int cmd) { // shift cmd for debug
 void debug_setLED(int cmd) {
   shiftcmd(cmd); // debug
 }
-void setLED() {
-  int cmd;
-  cmd = 0x8f; //turn on display with max brightness
+void setLED(int cmd) {
   digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
   cmdout(cmd); // send instruction
   digitalWrite(STB, HIGH); // complete data transmission
@@ -45,10 +43,10 @@ void debug_reset() {
 
   shiftcmd(0x40); // sequential addressing
   digitalWrite(STB, LOW);
-  shiftOut(DIO, CLK, LSBFIRST, 0xc0); // starting address to 0
+  shiftOut(DIO, CLK, LSBFIRST, 0xC0); // starting address to 0
 
   for (int i = 0; i < 16; i++) {
-    shiftOut(DIO, CLK, LSBFIRST, 0xbf); // sets digit to 0;
+    shiftOut(DIO, CLK, LSBFIRST, 0x3F); // sets digit to 0;
   }
   digitalWrite(STB, HIGH);
 }
@@ -78,13 +76,44 @@ void setup() {
   
   
   debug_setLED(ON); // activate led with max brightness
+  // setLED(ON);
   // debug_reset();
 
 }
 
-#define RESET 0
+
 void loop() {
+  char mode;
   Serial.println("\nTM1638 Start\n");
+  Serial.println("0 - Reset");
+  Serial.println("1 - On");
+  Serial.println("2 - Off");
+
+  Serial.println("");
+  Serial.print("CMD: ");
+  while(Serial.available() == 0);
+  mode = Serial.read();
+
+  switch (mode) {
+    case '0':
+
+        Serial.print("reset");
+
+      debug_reset();
+      break;
+    case '1':
+        Serial.print("on");
+
+      debug_setLED(ON);
+      break;
+    case '2':
+    Serial.println("off");
+      debug_setLED(OFF);
+      break;
+    default:
+      break;
+  }
+  // delay(200);
   // int mode = RESET;
 
   // switch (MODE) {
