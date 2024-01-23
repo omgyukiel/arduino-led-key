@@ -26,7 +26,7 @@ void setLED() {
   int cmd;
   cmd = 0x8f; //turn on display with max brightness
   digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
-  cmdout(cmd, CMDMSK); // send instruction
+  cmdout(cmd); // send instruction
   digitalWrite(STB, HIGH); // complete data transmission
 }
 
@@ -41,8 +41,12 @@ void setup() {
   digitalWrite(STB, HIGH); // set high on completion of instruction and data transmissions
   digitalWrite(CLK, LOW);
   digitalWrite(DIO, LOW);
+  
+  digitalWrite(STB, LOW);
+  shiftOut(DIO, CLK, LSBFIRST, 0x8f);
+  digitalWrite(STB, HIGH);
 
-  setLED()); // activate led with max brightness
+  // setLED(); // activate led with max brightness
 }
 
 void loop() {
