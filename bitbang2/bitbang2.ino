@@ -5,6 +5,8 @@
 #define DIO 8
 
 #define CMDMSK 0x80 // 8 bit mask
+#define ON 0x8F // debug on
+#define OFF 0x87 // debug off
 
 
 void cmdout(int cmd){ // Send 8 bit instruction
@@ -28,8 +30,8 @@ void shiftcmd(int cmd) { // shift cmd for debug
   digitalWrite(STB, HIGH);
 }
 
-void debug_setLED() {
-  shiftcmd(0x8F); // debug
+void debug_setLED(int cmd) {
+  shiftcmd(cmd); // debug
 }
 void setLED() {
   int cmd;
@@ -75,8 +77,8 @@ void setup() {
   digitalWrite(DIO, LOW);
   
   
-  debug_setLED(); // activate led with max brightness
-  debug_reset();
+  debug_setLED(ON); // activate led with max brightness
+  // debug_reset();
 
 }
 
