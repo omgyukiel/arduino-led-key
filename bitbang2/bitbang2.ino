@@ -22,12 +22,32 @@ void cmdout(int cmd){ // Send 8 bit instruction
   }
 }
 
+void shiftcmd(int cmd) { // shift cmd for debug
+  digitalWrite(STB, LOW);
+  shiftOut(8, CLK, LSBFIRST, cmd);
+  digitalWrite(STB, HIGH);
+}
+
 void setLED() {
+  shiftcmd(0x8F); // debug
+  return;
   int cmd;
   cmd = 0x8f; //turn on display with max brightness
   digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
   cmdout(cmd); // send instruction
   digitalWrite(STB, HIGH); // complete data transmission
+}
+
+void reset() {
+  shiftcmd(0x40); // sequential addressing
+  digitalWrite(STB, LOW);
+  shiftOut(DIO, CLK, LSBFIRST, 0xc0); // starting address to 0
+
+  for (int i = 0; i < 8, i++) {
+    shiftOut(DIO, CLK, LSBFIRST, 0x00); // sets digit to 0;
+  }
+  digitalWrite(STB, HIGH);
+  return;
 }
 
 void setup() {
@@ -42,14 +62,20 @@ void setup() {
   digitalWrite(CLK, LOW);
   digitalWrite(DIO, LOW);
   
-  digitalWrite(STB, LOW);
-  shiftOut(DIO, CLK, LSBFIRST, 0x8f);
-  digitalWrite(STB, HIGH);
+  
 
-  // setLED(); // activate led with max brightness
+  setLED(); // activate led with max brightness
 }
 
+#define RESET 0
 void loop() {
   Serial.println("\nTM1638 Start\n");
+  // int mode = RESET;
+
+  // switch (MODE) {
+  //   case 'RESET':
+  //     Serial.println("Reset LED");
+  //     break;
+  // }
   
 }
