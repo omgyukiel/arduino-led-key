@@ -4,10 +4,12 @@
 #define CLK 9
 #define DIO 8
 
-#define CMDMSK 0x80 // 8 bit mask
+#define CMDMSK 0x01 // 8 bit mask for least significant bit (LSB)
 #define ON 0x8F // turn on display with max brightness
 #define OFF 0x87 // turn off display
 
+              /*   0     1     2     3    4     5     6     7     8     9 */
+int digits[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f}; // dictionary for 7-segement integer representations
 
 void cmdout(int cmd){ // Send 8 bit instruction
   byte j;
@@ -19,7 +21,7 @@ void cmdout(int cmd){ // Send 8 bit instruction
     }
     // clocks the MSB at the output pin
     digitalWrite(CLK, HIGH);  
-    cmd = cmd<<1;
+    cmd = cmd>>1;
     digitalWrite(CLK, LOW); 
   }
 }
@@ -86,8 +88,11 @@ void loop() {
   char mode;
   Serial.println("\nTM1638 Start\n");
   Serial.println("0 - Reset");
-  Serial.println("1 - On");
-  Serial.println("2 - Off");
+  Serial.println("1 - Debug On");
+  Serial.println("2 - Debug Off");
+  Serial.println("3 - On");
+  Serial.println("4 - Off");
+
 
   Serial.println("");
   Serial.print("CMD: ");
@@ -102,13 +107,21 @@ void loop() {
       debug_reset();
       break;
     case '1':
-        Serial.print("on");
+        Serial.print("debug on");
 
       debug_setLED(ON);
       break;
     case '2':
-    Serial.println("off");
+    Serial.println("debug off");
       debug_setLED(OFF);
+      break;
+    case '3':
+      Serial.println("prod on");
+      setLED(ON);
+      break;
+    case '4':
+      Serial.println("prod off");
+      setLED(OFF);
       break;
     default:
       break;
