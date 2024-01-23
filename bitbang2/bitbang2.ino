@@ -28,9 +28,10 @@ void shiftcmd(int cmd) { // shift cmd for debug
   digitalWrite(STB, HIGH);
 }
 
-void setLED() {
+void debug_setLED() {
   shiftcmd(0x8F); // debug
-  return;
+}
+void setLED() {
   int cmd;
   cmd = 0x8f; //turn on display with max brightness
   digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
@@ -38,15 +39,26 @@ void setLED() {
   digitalWrite(STB, HIGH); // complete data transmission
 }
 
-void reset() {
+void debug_reset() {
+
   shiftcmd(0x40); // sequential addressing
   digitalWrite(STB, LOW);
   shiftOut(DIO, CLK, LSBFIRST, 0xc0); // starting address to 0
 
-  for (int i = 0; i < 8, i++) {
-    shiftOut(DIO, CLK, LSBFIRST, 0x00); // sets digit to 0;
+  for (int i = 0; i < 16; i++) {
+    shiftOut(DIO, CLK, LSBFIRST, 0xbf); // sets digit to 0;
   }
   digitalWrite(STB, HIGH);
+}
+void reset() {
+  shiftcmd(0x40); // sequential addressing
+  // digitalWrite(STB, LOW);
+  // shiftOut(DIO, CLK, LSBFIRST, 0xc0); // starting address to 0
+
+  // for (int i = 0; i < 8; i++) {
+  //   shiftOut(DIO, CLK, LSBFIRST, 0x00); // sets digit to 0;
+  // }
+  // digitalWrite(STB, HIGH);
   return;
 }
 
@@ -63,8 +75,9 @@ void setup() {
   digitalWrite(DIO, LOW);
   
   
+  debug_setLED(); // activate led with max brightness
+  debug_reset();
 
-  setLED(); // activate led with max brightness
 }
 
 #define RESET 0
