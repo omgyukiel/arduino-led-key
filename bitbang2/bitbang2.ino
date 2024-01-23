@@ -26,6 +26,63 @@ void cmdout(int cmd){ // Send 8 bit instruction
   }
 }
 
+int push_read() {
+  int cmd;
+  byte v;
+  byte buttons = 0;
+  int place;
+
+  cmd = 0x42; // Read the buttons and set DIO to MISO and read 4 bytes
+  digitalWrite(STB, LOW);
+  cmdout(cmd); // Read data
+  pinMode(DIO, INPUT_PULLUP);
+
+
+  for (int i = 0; i < 4; i++) { // read 4 bytes
+    place = 1000/(pow(10, i));
+    v = datin(8); // receive 1 byte (8 bits)
+    Serial.println("Received byte ");
+    Serial.print(i);
+    Serial.print("\t");
+    Serial.print(v, HEX);
+    if (v == 0x8) { // S5-S8 is pushed
+      Serial.println("\nbutton pushed at ");
+      Serial.print(place);
+    }
+    buttons = buttons | v;
+  }
+  pinMode(DIO, OUTPUT);
+
+  digitalWrite(STB, HIGH);
+  return buttons;
+}
+
+void counter() {
+  byte buttons = push_read();
+  Serial.println("\nbuttons: ");
+  Serial.print(buttons, BIN);
+  Serial.println("");
+  for (int i = 0; i < 8; i++) {
+    int mask = 0x1 << i;
+  }
+
+
+  // return v;
+}
+
+int datin(byte cnt) {
+  int v;
+  byte j;
+  v = 0;
+  for(j = 0; j<cnt; j++) { // loop for cnt bits
+    v = v<<1;
+    digitalWrite(CLK, HIGH);
+    v = v | digitalRead(DIO);
+    digitalWrite(CLK, LOW);
+  }
+  return v;
+}
+
 void shiftcmd(int cmd) { // shift cmd for debug
   digitalWrite(STB, LOW);
   shiftOut(8, CLK, LSBFIRST, cmd);
@@ -36,7 +93,7 @@ void debug_setLED(int cmd) {
   shiftcmd(cmd); // debug
 }
 void setLED(int cmd) {
-  // digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
+  digitalWrite(STB, LOW); // strobe low sets peripheral to listen on DIO
   cmdout(cmd); // send instruction
   digitalWrite(STB, HIGH); // complete data transmission
 }
@@ -96,64 +153,64 @@ void setup() {
   digitalWrite(DIO, LOW);
   
   
-  debug_setLED(ON); // activate led with max brightness
-  // setLED(ON);
+  // debug_setLED(ON); // activate led with max brightness
+  setLED(ON); // Activate led with max brightness
+  reset(); // reset led
   // debug_reset();
 
 }
 
-void counter() {
-
-}
 void loop() {
-  char mode;
-  Serial.println("\nTM1638 Start\n");
-  Serial.println("0 - Debug Reset");
-  Serial.println("r - Reset");
-  Serial.println("1 - Debug On");
-  Serial.println("2 - Debug Off");
-  Serial.println("3 - On");
-  Serial.println("4 - Off");
-  Serial.println("5 - counter");
+  counter();
+  delay(1000);
+  // char mode;
+  // Serial.println("\nTM1638 Start\n");
+  // Serial.println("0 - Debug Reset");
+  // Serial.println("r - Reset");
+  // Serial.println("1 - Debug On");
+  // Serial.println("2 - Debug Off");
+  // Serial.println("3 - On");
+  // Serial.println("4 - Off");
+  // Serial.println("5 - counter");
 
 
-  Serial.println("");
-  Serial.print("CMD: ");
-  while(Serial.available() == 0);
-  mode = Serial.read();
+  // Serial.println("");
+  // Serial.print("CMD: ");
+  // while(Serial.available() == 0);
+  // mode = Serial.read();
 
-  switch (mode) {
-    case '0':
-        Serial.print("Debug reset");
-      debug_reset();
-      break;
-    case 'r':
-      Serial.print("Reset");
-      reset();
-    break;
-    case '1':
-        Serial.print("debug on");
+  // switch (mode) {
+  //   case '0':
+  //       Serial.print("Debug reset");
+  //     debug_reset();
+  //     break;
+  //   case 'r':
+  //     Serial.print("Reset");
+  //     reset();
+  //   break;
+  //   case '1':
+  //       Serial.print("debug on");
 
-      debug_setLED(ON);
-      break;
-    case '2':
-    Serial.println("debug off");
-      debug_setLED(OFF);
-      break;
-    case '3':
-      Serial.println("prod on");
-      setLED(ON);
-      break;
-    case '4':
-      Serial.println("prod off");
-      setLED(OFF);
-      break;
-    case '5':
-      counter();
-      break;
-    default:
-      break;
-  }
+  //     debug_setLED(ON);
+  //     break;
+  //   case '2':
+  //   Serial.println("debug off");
+  //     debug_setLED(OFF);
+  //     break;
+  //   case '3':
+  //     Serial.println("prod on");
+  //     setLED(ON);
+  //     break;
+  //   case '4':
+  //     Serial.println("prod off");
+  //     setLED(OFF);
+  //     break;
+  //   case '5':
+  //     counter();
+  //     break;
+  //   default:
+  //     break;
+  // }
   // delay(200);
   // int mode = RESET;
 
