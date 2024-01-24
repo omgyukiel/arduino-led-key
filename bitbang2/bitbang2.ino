@@ -62,6 +62,7 @@ int push_read() {
       v = v<<i;
       Serial.print("\nbutton pushed at v:");
       Serial.println(v);
+      count = 0;
 
     }
     buttons = buttons | v;
@@ -99,7 +100,6 @@ void display_led(byte buttons) {
     msk = 0x1<<pos; // mask each bit position
     led(buttons&msk ? 1:0, pos); // bit at position i is 1, set led
   }
-  return;
 }
 void counter() {
   int buttons = push_read();
@@ -147,37 +147,50 @@ void display_num(int num, int buttons) { // supports 4 digit display
   // }
   int cmd;
   int digit;
-  cmd = 0x40; // sequential addressing
-  digitalWrite(STB, LOW);
-  cmdout(cmd);
-  digitalWrite(STB, HIGH);
+  // int msk;
+  // for(int pos = 0; pos <4; pos++) {
+  //   msk = 0x1<<pos; // mask each bit position
+  //   led(buttons&msk ? 1:0, pos); // bit at position i is 1, set led
+  // }
+  // return;
+  int powten[4] = {1000,100,10,1};
+  for (int i = 0; i < 4; i++) {
+    cmd = 0x44; 
+    digitalWrite(STB, LOW);
+    cmdout(cmd);
+    digitalWrite(STB, HIGH);
 
-  cmd = 0xc8; // 1000s address
-  digitalWrite(STB, LOW);
-  cmdout(cmd);
-  // digitalWrite(STB, HIGH);
+    cmd = (0xc8 + i*2); // 1000s address
+    digit = (num/powten[i] % 10);
+    digitalWrite(STB, LOW);
+    cmdout(cmd);
+    cmdout(digits[digit]); // sets digit to dec;
+    digitalWrite(STB, HIGH);
+  }
 
   // digitalWrite(STB, LOW);
 
-  int powten[4] = {1, 10, 100, 1000};
+  // int powten[4] = {1, 10, 100, 1000};
+  // digit = (num/powten[i] % 10);
+  // cmdout(digits[digit]); // sets digit to dec;
 
-  for (int i = 3; i >= 0; i--) {
-    // Serial.print("counter =");
-    // Serial.println(num);
-    // Serial.print("powten =");
-    // Serial.println(powten[i]);
-    digit = (num/powten[i] % 10);
+  // for (int i = 3; i >= 0; i--) {
+  //   // Serial.print("counter =");
+  //   // Serial.println(num);
+  //   // Serial.print("powten =");
+  //   // Serial.println(powten[i]);
+  //   digit = (num/powten[i] % 10);
 
-    // Serial.print("digit = ");
-    // Serial.println(digit);
+  //   // Serial.print("digit = ");
+  //   // Serial.println(digit);
 
-    // Serial.print("digits[i] = ");
-    // Serial.println(digits[digit], HEX);
-    cmdout(digits[digit]); // sets digit to dec;
-    // cmdout(0x00); // sets led off;
+  //   // Serial.print("digits[i] = ");
+  //   // Serial.println(digits[digit], HEX);
+  //   cmdout(digits[digit]); // sets digit to dec;
+  //   // cmdout(0x00); // sets led off;
 
-  }
-  digitalWrite(STB, HIGH);
+  // }
+  // digitalWrite(STB, HIGH);
 
 }
 void debug_setLED(int cmd) {
@@ -255,7 +268,7 @@ void setup() {
 
 void loop() {
   counter();
-  delay(200); // debounce time
+  delay(175); // debounce time
   // char mode;
   // Serial.println("\nTM1638 Start\n");
   // Serial.println("0 - Debug Reset");
