@@ -68,7 +68,6 @@ int push_read() {
 
     }
     buttons = buttons | v;
-    // buttons << 8;
   }
   
   pinMode(DIO, OUTPUT);
@@ -80,7 +79,6 @@ int push_read() {
 void led(byte v, int pos) {
   int cmd;
   pos = 0xc1 + (pos<<1);
-  // Serial.print("pos");
   // Serial.println(pos);
   cmd = 0x44; // single address display
   digitalWrite(STB, LOW);
@@ -90,8 +88,6 @@ void led(byte v, int pos) {
   digitalWrite(STB, LOW);
   // Serial.print("c1 + pos");
   // Serial.println(pos, BIN);
-  // Serial.print("bit ");
-  // Serial.println(v);
   cmdout(pos); // led 1 address increcement by next led position
   cmdout(v);
   digitalWrite(STB, HIGH);
@@ -105,12 +101,6 @@ void display_led(byte buttons) {
 }
 int counter() {
   int buttons = push_read();
-  // if (count > 9999) {
-  //   reset();
-  // }
-  // Serial.println("\nbuttons: ");
-  // Serial.print(buttons, BIN);
-  // Serial.println("");
   display_led(buttons);
 
   // Serial.print("\ncounter: ");
@@ -143,18 +133,10 @@ void shiftcmd(int cmd) { // shift cmd for debug
 }
 
 void display_num(int num, int buttons) { // supports 4 digit display
-  // if (buttons > 8) {
-  //   num = 0;
-  //   count = 0;
-  // }
+
   int cmd;
   int digit;
-  // int msk;
-  // for(int pos = 0; pos <4; pos++) {
-  //   msk = 0x1<<pos; // mask each bit position
-  //   led(buttons&msk ? 1:0, pos); // bit at position i is 1, set led
-  // }
-  // return;
+
   int powten[4] = {1000,100,10,1};
   for (int i = 0; i < 4; i++) {
     cmd = 0x44; 
@@ -233,9 +215,7 @@ void reset() {
   cmd = 0xc0; // first address
   digitalWrite(STB, LOW);
   cmdout(cmd);
-  // digitalWrite(STB, HIGH);
 
-  // digitalWrite(STB, LOW);
   for (int i = 0; i < 16; i++) {
     if (i%2) { // odd
       cmdout(0x00); // sets led offS
