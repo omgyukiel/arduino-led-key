@@ -12,6 +12,8 @@
 int digits[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f}; // dictionary for 7-segement integer representations
 // int led[8] = {};
 int count = 0;
+int t = 0;
+int debounce = 130;
 
 void cmdout(int cmd){ // Send 8 bit instruction
   byte j;
@@ -50,8 +52,8 @@ int push_read() {
     if (v == 0x8) { // S5-S8 is pushed
       v = 0x10;
       v = v<<i;
-      Serial.print("\nbutton pushed at v:");
-      Serial.println(v);
+      // Serial.print("\nbutton pushed at v:");
+      // Serial.println(v);
       count += place;
       if (count > 9999) {
         count = 0;
@@ -60,8 +62,8 @@ int push_read() {
     else if (v == 0x80) {
       v = 0x1;
       v = v<<i;
-      Serial.print("\nbutton pushed at v:");
-      Serial.println(v);
+      // Serial.print("\nbutton pushed at v:");
+      // Serial.println(v);
       count = 0;
 
     }
@@ -101,7 +103,7 @@ void display_led(byte buttons) {
     led(buttons&msk ? 1:0, pos); // bit at position i is 1, set led
   }
 }
-void counter() {
+int counter() {
   int buttons = push_read();
   // if (count > 9999) {
   //   reset();
@@ -111,14 +113,14 @@ void counter() {
   // Serial.println("");
   display_led(buttons);
 
-  Serial.print("\ncounter: ");
-  Serial.println(count);
+  // Serial.print("\ncounter: ");
+  // Serial.println(count);
   // Serial.println("\n");
   
   display_num(count, buttons);
 
 
-  // return v;
+  return buttons;
 }
 
 int datin(byte cnt) {
@@ -267,63 +269,20 @@ void setup() {
 }
 
 void loop() {
-  counter();
-  delay(110); // debounce time
-  // char mode;
-  // Serial.println("\nTM1638 Start\n");
-  // Serial.println("0 - Debug Reset");
-  // Serial.println("r - Reset");
-  // Serial.println("1 - Debug On");
-  // Serial.println("2 - Debug Off");
-  // Serial.println("3 - On");
-  // Serial.println("4 - Off");
-  // Serial.println("5 - counter");
+  int button = counter();
+  if (button) { // buttons is being pressed
+    t++;
+  }
+  else {
+    t = 0;
+  }
 
+  if (t > 4) {
+    Serial.println(t);
+    delay( debounce/(log(t)));
+  } else {
+    Serial.println(t);
+    delay(debounce); // debounce time
+  }
 
-  // Serial.println("");
-  // Serial.print("CMD: ");
-  // while(Serial.available() == 0);
-  // mode = Serial.read();
-
-  // switch (mode) {
-  //   case '0':
-  //       Serial.print("Debug reset");
-  //     debug_reset();
-  //     break;
-  //   case 'r':
-  //     Serial.print("Reset");
-  //     reset();
-  //   break;
-  //   case '1':
-  //       Serial.print("debug on");
-
-  //     debug_setLED(ON);
-  //     break;
-  //   case '2':
-  //   Serial.println("debug off");
-  //     debug_setLED(OFF);
-  //     break;
-  //   case '3':
-  //     Serial.println("prod on");
-  //     setLED(ON);
-  //     break;
-  //   case '4':
-  //     Serial.println("prod off");
-  //     setLED(OFF);
-  //     break;
-  //   case '5':
-  //     counter();
-  //     break;
-  //   default:
-  //     break;
-  // }
-  // delay(200);
-  // int mode = RESET;
-
-  // switch (MODE) {
-  //   case 'RESET':
-  //     Serial.println("Reset LED");
-  //     break;
-  // }
-  
 }
