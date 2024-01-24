@@ -10,6 +10,7 @@
 
               /*   0     1     2     3    4     5     6     7     8     9 */
 int digits[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f}; // dictionary for 7-segement integer representations
+// int led[8] = {};
 int count = 0;
 
 void cmdout(int cmd){ // Send 8 bit instruction
@@ -30,7 +31,7 @@ void cmdout(int cmd){ // Send 8 bit instruction
 int push_read() {
   int cmd;
   byte v;
-  int buttons = 0;
+  int buttons = 0x00;
   int place;
 
   cmd = 0x42; // Read the buttons and set DIO to MISO and read 4 bytes
@@ -45,15 +46,23 @@ int push_read() {
     // Serial.println("Received byte ");
     // Serial.print(i);
     // Serial.print("\t");
-    // Serial.print(v, HEX);
+    // Serial.println(v, HEX);
     if (v == 0x8) { // S5-S8 is pushed
-
-      Serial.println("\nbutton pushed at ");
-      Serial.print(place);
+      v = 0x10;
+      v = v<<i;
+      Serial.print("\nbutton pushed at v:");
+      Serial.println(v);
       count += place;
       if (count > 9999) {
         count = 0;
       }
+    }
+    else if (v == 0x80) {
+      v = 0x1;
+      v = v<<i;
+      Serial.print("\nbutton pushed at v:");
+      Serial.println(v);
+
     }
     buttons = buttons | v;
     // buttons << 8;
@@ -65,20 +74,48 @@ int push_read() {
   return buttons;
 }
 
+void led(byte v, int pos) {
+  int cmd;
+  pos = 0xc1 + (pos<<1);
+  // Serial.print("pos");
+  // Serial.println(pos);
+  cmd = 0x44; // single address display
+  digitalWrite(STB, LOW);
+  cmdout(0x44);
+  digitalWrite(STB, HIGH);
+
+  digitalWrite(STB, LOW);
+  // Serial.print("c1 + pos");
+  // Serial.println(pos, BIN);
+  // Serial.print("bit ");
+  // Serial.println(v);
+  cmdout(pos); // led 1 address increcement by next led position
+  cmdout(v);
+  digitalWrite(STB, HIGH);
+}
+void display_led(byte buttons) {
+  int msk;
+  for(int pos = 0; pos <8; pos++) {
+    msk = 0x1<<pos; // mask each bit position
+    led(buttons&msk ? 1:0, pos); // bit at position i is 1, set led
+  }
+  return;
+}
 void counter() {
   int buttons = push_read();
   // if (count > 9999) {
   //   reset();
   // }
-  Serial.println("\nbuttons: ");
-  Serial.print(buttons, BIN);
-  Serial.println("");
+  // Serial.println("\nbuttons: ");
+  // Serial.print(buttons, BIN);
+  // Serial.println("");
+  display_led(buttons);
+
+  Serial.print("\ncounter: ");
+  Serial.println(count);
+  // Serial.println("\n");
   
-  Serial.println("\ncounter: ");
-  Serial.print(count);
-  Serial.println("\n");
-  
-  display_num(count);
+  display_num(count, buttons);
 
 
   // return v;
@@ -103,7 +140,11 @@ void shiftcmd(int cmd) { // shift cmd for debug
   digitalWrite(STB, HIGH);
 }
 
-void display_num(int num) { // supports 4 digit display
+void display_num(int num, int buttons) { // supports 4 digit display
+  // if (buttons > 8) {
+  //   num = 0;
+  //   count = 0;
+  // }
   int cmd;
   int digit;
   cmd = 0x40; // sequential addressing
@@ -119,6 +160,7 @@ void display_num(int num) { // supports 4 digit display
   // digitalWrite(STB, LOW);
 
   int powten[4] = {1, 10, 100, 1000};
+
   for (int i = 3; i >= 0; i--) {
     // Serial.print("counter =");
     // Serial.println(num);
@@ -132,7 +174,7 @@ void display_num(int num) { // supports 4 digit display
     // Serial.print("digits[i] = ");
     // Serial.println(digits[digit], HEX);
     cmdout(digits[digit]); // sets digit to dec;
-    cmdout(0x00); // sets led off;
+    // cmdout(0x00); // sets led off;
 
   }
   digitalWrite(STB, HIGH);
