@@ -13,7 +13,7 @@ int digits[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f}; /
 // int led[8] = {};
 int count = 0;
 int t = 0;
-int debounce = 130;
+int debounce = 15;
 
 void cmdout(int cmd){ // Send 8 bit instruction
   byte j;
@@ -30,7 +30,7 @@ void cmdout(int cmd){ // Send 8 bit instruction
   }
 }
 
-int push_read() {
+int push_read(bool doAdd) {
   int cmd;
   byte v;
   int buttons = 0x00;
@@ -54,9 +54,11 @@ int push_read() {
       v = v<<i;
       // Serial.print("\nbutton pushed at v:");
       // Serial.println(v);
-      count += place;
-      if (count > 9999) {
-        count = 0;
+      if (doAdd) {
+        count += place;
+        if (count > 9999) {
+          count = 0;
+        }
       }
     }
     else if (v == 0x80) {
@@ -99,8 +101,8 @@ void display_led(byte buttons) {
     led(buttons&msk ? 1:0, pos); // bit at position i is 1, set led
   }
 }
-int counter() {
-  int buttons = push_read();
+int counter(bool doAdd) {
+  int buttons = push_read(doAdd);
   display_led(buttons);
 
   // Serial.print("\ncounter: ");
@@ -249,20 +251,49 @@ void setup() {
 }
 
 void loop() {
-  int button = counter();
-  if (button) { // buttons is being pressed
-    t++;
-  }
+  int button;
+  if (t == 0) {
+    button = counter(1);
+    if (button) { // buttons is being pressed
+      t++;
+    }
+    else {
+      t = 0;
+      delay(debounce); // debounce time
+    }
+  } else if (t < 70) {
+    button = counter(0);
+    if (button) { // buttons is being pressed
+      t++;
+    }
+    else {
+      t = 0;
+      delay(debounce); // debounce time
+    }
+  } else if (t < 90){
+    // Serial.println(t);
+    button = counter(1);
+
+    if (button) { // buttons is being pressed
+      t++;
+      delay(150);
+    }
+    else {
+      t = 0;
+      delay(debounce); // debounce time
+    }
+  } 
   else {
-    t = 0;
-  }
-
-  if (t > 4) {
     Serial.println(t);
-    delay( debounce/(log(t)));
-  } else {
-    Serial.println(t);
-    delay(debounce); // debounce time
-  }
+    button = counter(1);
 
+    if (button) { // buttons is being pressed
+      t++;
+      delay(2000/log((pow(2,(t/2)))));
+    }
+    else {
+      t = 0;
+      delay(debounce); // debounce time
+    }
+  } 
 }
