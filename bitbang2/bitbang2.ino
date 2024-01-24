@@ -268,7 +268,7 @@ void setup() {
 
 void loop() {
   counter();
-  delay(75); // debounce time
+  delay(110); // debounce time
   // char mode;
   // Serial.println("\nTM1638 Start\n");
   // Serial.println("0 - Debug Reset");
